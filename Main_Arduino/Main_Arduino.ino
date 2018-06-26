@@ -1,18 +1,21 @@
 #include <SoftwareSerial.h>
 
-int stepPin1 = 10;
-int dirPin1 = 11;
-int stepPin2 = 2;
-int dirPin2 = 3;
-int stepTime = 12;
+const int stepPin1 = 10;
+const int dirPin1 = 11;
+const int stepPin2 = 2;
+const int dirPin2 = 3;
+const int stepTime = 12;
 
 char inChar = '\0';
 
 SoftwareSerial BT(5, 6); //TX, RX from Arduino POV
 
 void setup() {  
-  pinMode(stepPin, OUTPUT);
-  pinMode(dirPin, OUTPUT);
+  pinMode(stepPin1, OUTPUT);
+  pinMode(dirPin1, OUTPUT);
+  pinMode(stepPin2, OUTPUT);
+  pinMode(dirPin2, OUTPUT);
+
   Serial.begin(9600);
   BT.begin(9600);
 }
@@ -63,6 +66,6 @@ void moveMotors() {
   }
  }
 }
-void pick(){
+void pick() {
+  delay(1000);
 }
-
