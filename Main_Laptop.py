@@ -38,8 +38,14 @@ def moveMotors(dir):
 		print("Arduino's response: ", ser.read(1))
 
 if __name__ == "__main__":
-	print("Extracting coorddinates")
-	coords = SWL.main(getName())
+	print("Give Input")
+	name=getName()
+	print("Capturing Image...")
+	capture()
+	path=''	#Fix path here
+	print("Extracting coordinates")
+	coords = SWL.main(name,path)
+	os.remove(path)
 	dir = get_string_from_coords(coords)
 	print("Moving Arm")
 	moveMotors(dir)
