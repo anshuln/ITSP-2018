@@ -44,7 +44,7 @@ if __name__ == "__main__":
 	capture()
 	path=''	#Fix path here
 	print("Extracting coordinates")
-	coords = SWL.main(name,path)
+	coords = SWL.main(path,name)
 	os.remove(path)
 	dir = get_string_from_coords(coords)
 	print("Moving Arm")
