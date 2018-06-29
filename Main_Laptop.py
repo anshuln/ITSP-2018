@@ -1,10 +1,19 @@
 import serial
 import Sliding_Windows as SWL
+import pyautogui
 
 ser = serial.Serial('COM4',9600,timeout=None)
 dictionary = {'1':'crocin', '2':'digene', '3':'flagyl', '4':'norflox', '5':'wikoryl'}
 size=[400,400]
 steps=1500
+def capture():
+	pyautogui.hotkey('alt', 'tab')
+	pyautogui.PAUSE=2.5
+	pyautogui.click(x=590,y=234)
+	pyautogui.PAUSE=4
+	pyautogui.click(x=672,y=518)
+	pyautogui.PAUSE=2.5
+	pyautogui.click(x=1037,y=162)
 
 def get_string_from_coords(coords):
 	x = int((coords[0]/size[0])*steps)
