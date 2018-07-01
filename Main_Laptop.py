@@ -25,7 +25,7 @@ def read_input_from_email():
 		time.sleep(3)
 	for id in unread_msg_nums:
 		_, response = imap.fetch(id, '(UID BODY[TEXT])')
-		imap.store(e_id, '+FLAGS', '\Seen')
+		imap.store(id, '+FLAGS', '\Seen')
 	print(response[0][1])
 	return(response[0][1])
 	
