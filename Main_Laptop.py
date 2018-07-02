@@ -1,45 +1,33 @@
 import serial
 import Sliding_Windows as SWL
 import pyautogui
-import imaplib
+import os
 ser = serial.Serial('COM4',9600,timeout=None)
-dictionary = {'1':'crocin', '2':'digene', '3':'flagyl', '4':'norflox', '5':'wikoryl'}
-size=[400,400]
-steps=1500
+dictionary = {b'1':'crocin', b'2':'digene', b'3':'flagyl', b'4':'norflox', b'5':'wikoryl'}
+size=[1687,1362] #Hardcoded in SLW, change if changed here
+steps_x = 1700
+steps_y = 1500
 def capture():
 	pyautogui.hotkey('alt', 'tab')
 	pyautogui.PAUSE=2.5
-	pyautogui.click(x=590,y=234)
-	pyautogui.PAUSE=4
-	pyautogui.click(x=672,y=518)
-	pyautogui.PAUSE=2.5
-	pyautogui.click(x=1037,y=162)
-def read_input_from_email():
-	imapObj=imaplib.IMAP4_SSL('imap.gmail.com',993)
-	imapObj.login('ITSP35@gmail.com','ITSP35')
-	imapObj.select('INBOX')
-	unread_msg_nums=[]
-	while len(unread_msg_nums)==0:
-		status, response = imap.search(None, 'INBOX', '(UNSEEN)')
-		unread_msg_nums = response[0].split()
-		time.sleep(3)
-	for id in unread_msg_nums:
-		_, response = imap.fetch(id, '(UID BODY[TEXT])')
-		imap.store(id, '+FLAGS', '\Seen')
-	print(response[0][1])
-	return(response[0][1])
-	
+	pyautogui.click(x=722,y=481)
+	pyautogui.PAUSE=7
+	pyautogui.click(x=910,y=754)
+	pyautogui.PAUSE=3
+	pyautogui.click(x=1344,y=297)
+
 def get_string_from_coords(coords):
-	x = int((coords[0]/size[0])*steps)
-	y = int((coords[1]/size[1])*steps)
-	str = 'l'*x + 'd'*y + 'p' + 'r'*x + 'u'*y 
+	x = int((coords[0][0]/size[0])*steps_x)	
+	y = int((coords[0][1]/size[1])*steps_y)
+	str = 'r'*(x+40) + 'u'*y + 'p' + 'l'*(x+40) + 'd'*y + 'x' 
 	return str
 
 def getName():
 	#name = dictionary[ser.read()]
 	print("Awaiting Input...")
-# 	inString = chr(int(ser.read(2)))
-	inString=read_input_from_email()
+	while(ser.in_waiting == 0):
+		pass
+	inString = ser.read(1)
 	print("Input received")
 	return dictionary[inString]
 
@@ -56,11 +44,13 @@ if __name__ == "__main__":
 	print("Give Input")
 	name=getName()
 	print("Capturing Image...")
-	capture()
-	path=''	#Fix path here
+	#capture()
+	name='digene'
+	path='Picture 17.jpg'	#Fix path here
 	print("Extracting coordinates")
 	coords = SWL.main(path,name)
-	os.remove(path)
+	print(coords)
+	# os.remove(path)
 	dir = get_string_from_coords(coords)
 	print("Moving Arm")
 	moveMotors(dir)
