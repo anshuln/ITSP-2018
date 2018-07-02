@@ -11,30 +11,19 @@ def min_max(array):
 		xmax=max(xmax,array[i][0][0])
 		ymin=min(ymin,array[i][0][1])
 		ymax=max(ymax,array[i][0][1])
-	return xmin-0,xmax+0,ymin-0,ymax+0
+	return xmin-20,xmax+20,ymin-20,ymax+20
 
 def dist(p1,p2):
 	return(int(((p1[0]-p2[0])**2+(p1[1]-p2[1])**2)**(0.5)))
-# def get_borders(image):
-# 	im=cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
-# 	row_m=image.flatten()
-# 	col_m=image.flatten('F')
-# 	xmin=9999
-# 	xmax=-9999
-# 	ymin=9999
-# 	ymax=-9999
-# 	for i in range (len(row_m)):
-# 		if(row_m[i]!=0):
-# 			xmin=min(xmin,i%im.shape[0])
-# 			xmax=max(xmax,i%im.shape[0])
-# 	for i in range (len(col_m)):
-# 		if(col_m[i]):
-# 			ymin=min(ymin,i%im.shape[1])
-# 			ymax=max(ymax,i%im.shape[1])
-
-# 	print(xmin,xmax,ymin,ymax)
-# 	return xmin,xmax,ymin,ymax
-
+def adjacent(box1,box2):
+	threshold=10
+	# if(abs(box1[1][0]-box2[1][1])<=threshold or abs(box1[1][1]-box2[1][0])<=threshold or abs(box1[1][2]-box2[1][3])<threshold or abs(box1[1][3]-box2[1][2])<threshold):
+	# 	print(abs(box1[1][0]-box2[1][1]))
+	# 	print(abs(box1[1][1]-box2[1][0]))
+	# 	print(abs(box1[1][2]-box2[1][3]))
+	# 	return True 
+	if(dist([(box1[1][0]+box1[1][1])/2,(box1[1][2]+box1[1][3])/2],[(box2[1][0]+box2[1][1])/2,(box2[1][2]+box2[1][3])/2])-((((box2[1][1]-box2[1][0]+box1[1][1]-box1[1][0])/2)**2+((box2[1][3]-box2[1][2]+box1[1][3]-box1[1][2])/2)**2)**0.5)<=threshold):
+		return True
 
 def rotate(image,contour,pos):
 	rect=cv2.minAreaRect(contour)
@@ -54,29 +43,24 @@ def rotate(image,contour,pos):
 
 	cx = cx-pos[0]+max(ht,w)
 	cy = cy-pos[2]+max(ht,w)
-	# c1=np.zeros(image.shape)
-	# i=cv2.line(c1,(p1[0],p1[1]),(p2[0],p2[1]),(255,0,0),3)
-	# i1=cv2.line(i,(p3[0],p3[1]),(p2[0],p2[1]),(255,0,0),3)
-	# i2=cv2.line(i1,(p4[0],p4[1]),(p3[0],p3[1]),(255,0,0),3)
-	# i3=cv2.line(i2,(p1[0],p1[1]),(p4[0],p4[1]),(255,0,0),3)
-	# cv2.imshow("",i3)
-	# cv2.waitKey(0)
 	shape=(image.shape[0]+2*max(ht,w),image.shape[1]+2*max(ht,w),image.shape[2])
 	canvas=np.zeros(shape,np.uint8)
 	angle=degrees(atan(float((p1[0]-p2[0])/(p1[1]-p2[1]))))
 	print("angle=",angle)
-	# cx = canvas.shape[1]//2
-	# cy = canvas.shape[0]//2
+	cx = canvas.shape[1]//2
+	cy = canvas.shape[0]//2
 	rotMat=cv2.getRotationMatrix2D((cx,cy),-angle,1)
 	canvas[max(ht,w):image.shape[0]+max(ht,w) , max(ht,w):image.shape[1]+max(ht,w) , :] = image[:,:,:]
 
 	canvas = cv2.warpAffine(canvas,rotMat,(canvas.shape[0],canvas.shape[1]))
-	# i=cv2.line(canvas,(cx+w//2,cy),(cx-w//2,cy),(255,0,0),2)
-	# i=cv2.line(i,(cx,cy+ht//2),(cx,cy-ht//2),(255,0,0),2)
-	#xmin,xmax,ymin,ymax=get_borders(canvas)
-	# print(min_max(c))
 	return(canvas[cy-ht//2:cy+ht//2,cx-w//2:cx+w//2,:])
 
+def generate_bigger_contour(box1,box2,image):
+	xmin=min(box1[1][0],box2[1][0])
+	xmax=max(box1[1][1],box2[1][1])
+	ymin=min(box1[1][2],box2[1][2])
+	ymax=max(box1[1][3],box2[1][3])
+	return(image[ymin:ymax,xmin:xmax,:],[xmin,xmax,ymin,ymax])
 
 def area(img):
 	return img[0].shape[0]*img[0].shape[1]
@@ -88,49 +72,94 @@ def inside(im1,im2):
 	b=im1[1][0]>=im2[1][0] and im1[1][1]<=im2[1][1] and im1[1][2]>=im2[1][2] and im1[1][3]<=im1[1][3]
 	return b
 
-def compress(recs):
+def compress(recs,img):
 	recs=sorted(recs,key=area)
 	recs=[x for x in recs if area(x)>10000]
-	recs=[x for x in recs if aspect_ratio(x)>0.499999999 and aspect_ratio(x)<2]
+	recs=[x for x in recs if aspect_ratio(x)>0.2499999999 and aspect_ratio(x)<4]
 	imgs=[]	
 	pos=[]
-	for i in range(0,len(recs)):
-		#print(i)
-		f=0 	
-		for j in range(i+1,len(recs)):
-			if inside(recs[i],recs[j]) == True:
-				f=1
-				break
-		if f == 0:
-			#print(j)
-			imgs.append(rotate(recs[i][0],recs[i][2],recs[i][1]))
-			pos.append([recs[i][1][0],recs[i][1][2]])
-	return(imgs,pos)
+	rec_=[]
+	flag = 0
 
-def get_smaller_images(path='Test1.jpg'):
+	for k in range(0,5):
+		recs=sorted(recs,key=area)
+		recs=[x for x in recs if area(x)>10000]
+		recs=[x for x in recs if aspect_ratio(x)>0.2499999999 and aspect_ratio(x)<4]
+		imgs=[]	
+		pos=[]
+		rec_=[]
+		rec__=[]
+		for i in range(0,len(recs)):
+			#print(i)
+			f=0 	
+			for j in range(i+1,len(recs)):
+				if inside(recs[i],recs[j]) == True:
+					f=1
+					break
+			if f == 0:
+				#print(j)
+				#imgs.append(rotate(recs[i][0],recs[i][2],recs[i][1]))
+				rec_.append([recs[i][0],recs[i][1],recs[i][2],0])
+			
+		for i in range(len(rec_)):
+			for j in range(i+1,len(rec_)):
+				if(adjacent(rec_[i],rec_[j])):
+					rec_[i][3]=1
+					rec_[j][3]=1
+
+					img_small,pos_small=generate_bigger_contour(rec_[i],rec_[j],img)
+					# cv2.imshow("",rec_[i][0])
+					# cv2.waitKey()
+					# cv2.imshow("",rec_[j][0])
+					# cv2.waitKey()
+					# cv2.imshow("",img_small)
+					# cv2.waitKey(0)
+					if(flag==1):
+						cv2.imshow("",img_small)
+						cv2.waitKey(0)
+						imgs.append(img_small)
+						pos.append(pos_small)
+						flag = 2
+					else:
+						rec__.append([img_small,pos_small,0])
+			if(rec_[i][3]==0 and flag>=1):
+				imgs.append(rec_[i][0])
+				pos.append([rec_[i][1][0],rec_[i][1][2]])
+				flag = 2
+			else:
+				rec__.append(rec_[i])
+		if len(recs)==len(rec__):
+			flag = 1
+		recs=rec__
+		if flag == 2:
+			break
+	return(list(reversed(imgs)),list(reversed(pos)))
+
+def get_smaller_images(path='Picture 17.jpg'):
 	image=cv2.imread(path)
 	#Might wanna resize here
 	gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 	gray = cv2.bilateralFilter(gray, 11, 17, 17)
-	# cv2.imshow("",gray)
-	# cv2.waitKey(0)
-	edged = cv2.Canny(gray, 30, 200)
+	cv2.imshow("Image",image)
+	cv2.waitKey(0)
+	edged = cv2.Canny(gray, 10, 75)
+	cv2.imwrite("edged1.jpg",edged)
 	(__,cnts, _) = cv2.findContours(edged.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 	cnts = sorted(cnts,key = cv2.contourArea, reverse = True)
 	ret=[]
 	#cv2.drawContours(image,cnts,-1,(255,0,0),3)
 	for c in cnts:
 		xmin,xmax,ymin,ymax=min_max(c)
-		# print(min_max(c))
-		ret.append((image[ymin:ymax,xmin:xmax,:],[xmin,xmax+xmin,ymin,ymax+ymin],c))
-
-	imgs,pos=compress(ret)
+		ret.append((image[ymin:ymax,xmin:xmax,:],[xmin,xmax,ymin,ymax],c))
+	#cv2.imwrite("Contoured1.jpg",image)
+	imgs,pos=compress(ret,image)
 	print(pos)
 	return imgs,pos
 
-import matplotlib.pyplot as plt
-imgs,_ = get_smaller_images()
-for i in range(len(imgs)):
-	cv2.imwrite(str(i)+".jpg",imgs[i])
+if __name__=="__main__":
+	import matplotlib.pyplot as plt
+	imgs,_ = get_smaller_images()
+	for i in range(len(imgs)):
+		cv2.imwrite(str(i)+"a.jpg",imgs[i])
 
 
