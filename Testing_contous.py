@@ -1,7 +1,14 @@
 import cv2
 import numpy as np
 from math import atan,degrees
+'''
+This script basically breaks down a large image into smaller images according to object contours, and returns the smaller images to 
+the sliding windows script
+'''
 def min_max(array):	
+	'''
+	Returns bounding box of a contour
+	'''
 	xmin=9999
 	xmax=-9999
 	ymin=9999
@@ -16,6 +23,9 @@ def min_max(array):
 def dist(p1,p2):
 	return(int(((p1[0]-p2[0])**2+(p1[1]-p2[1])**2)**(0.5)))
 def adjacent(box1,box2):
+	'''
+	Tells whether two boxes are adjacent or not depending upon the distance between their centroids
+	'''
 	threshold=10
 	# if(abs(box1[1][0]-box2[1][1])<=threshold or abs(box1[1][1]-box2[1][0])<=threshold or abs(box1[1][2]-box2[1][3])<threshold or abs(box1[1][3]-box2[1][2])<threshold):
 	# 	print(abs(box1[1][0]-box2[1][1]))
@@ -26,6 +36,10 @@ def adjacent(box1,box2):
 		return True
 
 def rotate(image,contour,pos):
+	'''
+	Rotates an image such that its minimum are rectangle is perpendicular to the edges
+	WARNING- unstable implementation, use at your own risk
+	'''
 	rect=cv2.minAreaRect(contour)
 	box=cv2.boxPoints(rect)
 	box=np.int0(box)
@@ -56,6 +70,9 @@ def rotate(image,contour,pos):
 	return(canvas[cy-ht//2:cy+ht//2,cx-w//2:cx+w//2,:])
 
 def generate_bigger_contour(box1,box2,image):
+	'''
+	Merges two adjacent contours
+	'''
 	xmin=min(box1[1][0],box2[1][0])
 	xmax=max(box1[1][1],box2[1][1])
 	ymin=min(box1[1][2],box2[1][2])
