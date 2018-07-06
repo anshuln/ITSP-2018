@@ -5,13 +5,16 @@ import os
 ser = serial.Serial('COM4',9600,timeout=None)
 dictionary = {b'1':'crocin', b'2':'digene', b'3':'flagyl', b'4':'norflox', b'5':'wikoryl'}
 size=[1687,1362] #Hardcoded in SLW, change if changed here
-steps_x = 1700
+steps_x = 1700	#no. of steps the CNC moves over a complete traversal
 steps_y = 1500
 def capture():
+	'''
+	Basically switches the window to capture a photograph of the table
+	'''
 	pyautogui.hotkey('alt', 'tab')
 	pyautogui.PAUSE=2.5
 	pyautogui.click(x=722,y=481)
-	pyautogui.PAUSE=7
+	pyautogui.PAUSE=7	
 	pyautogui.click(x=910,y=754)
 	pyautogui.PAUSE=3
 	pyautogui.click(x=1344,y=297)
@@ -34,7 +37,7 @@ def getName():
 def moveMotors(dir):
 	i = 0
 	for i in range(0, len(dir)):
-		ser.write(dir[i].encode())
+		ser.write(dir[i].encode())	#the string is passed one character at a time since Arduino serial buffer is only 64 bytes long
 		print("Waiting for response from Arduino...")
 		while (ser.in_waiting == 0):
 			pass
@@ -45,7 +48,6 @@ if __name__ == "__main__":
 	name=getName()
 	print("Capturing Image...")
 	#capture()
-	name='digene'
 	path='Picture 17.jpg'	#Fix path here
 	print("Extracting coordinates")
 	coords = SWL.main(path,name)
