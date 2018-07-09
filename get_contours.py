@@ -36,9 +36,8 @@ def compress(recs):
 	return(imgs,pos)
 
 def get_smaller_images(path='Test1.jpg'):
-	image=cv2.imread(path)
+	gray=cv2.imread(path, 0)
 	#Might wanna resize here
-	gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 	gray = cv2.bilateralFilter(gray, 11, 17, 17)
 	edged = cv2.Canny(gray, 30, 200)
 	(__,cnts, _) = cv2.findContours(edged.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
