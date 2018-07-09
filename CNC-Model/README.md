@@ -15,3 +15,6 @@ This folder contains the SolidWorks files of the CNC built by us for ITSP-2018.
   - SolidWorks Assembly (.SLDASM)
   - JPEG File
   - 3D PDF
+  
+#### Preview Image
+![CNC img](https://github.com/anshuln/ITSP-2018/blob/final-commit/CNC-Model/XY%20CNC.JPG)
