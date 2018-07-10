@@ -5,13 +5,21 @@ from __future__ import print_function
 import argparse
 import sys
 import time
-
 import numpy as np
 import tensorflow as tf
 import cv2
 import matplotlib.pyplot as plt
-import get_contours
+import Testing_contours
 tic = time.time()
+model_file = "C:/Users/Atharv/Desktop/ITSP/tensorflow-for-poets-2-master/tf_files/retrained_graph.pb"
+label_file = "C:/Users/Atharv/Desktop/ITSP/tensorflow-for-poets-2-master/tf_files/retrained_labels.txt"
+input_height = 224
+input_width = 224
+input_mean = 128
+input_std = 128
+input_layer = "input"
+output_layer = "final_result"
+
 def load_graph(model_file):
     graph = tf.Graph()
     graph_def = tf.GraphDef()
@@ -52,10 +60,10 @@ def create_windows(image):
     height = image.shape[0]
     width = image.shape[1]
     
-    xmin=0
-    xmax=WINDOWX            #These values may be hard-coded, or maybe ratios, but since final image will
-    ymin=0                  #always be of same size, this does not matter
-    ymax=WINDOWY
+    xmin=-step
+    xmax=WINDOWX-step            #These values may be hard-coded, or maybe ratios, but since final image will
+    ymin=0-step                  #always be of same size, this does not matter
+    ymax=WINDOWY-step
 
     while xmax<width:
         xmin+=step
@@ -63,21 +71,30 @@ def create_windows(image):
         ymin=0
         ymax=WINDOWY
         while ymax<height:
-            
             ymin=ymin+step
             ymax=ymax+step
-            windows.append(image[xmin:xmax,ymin:ymax,0:3])
-            pos.append([((xmax+xmin)/2.0),((ymax+ymin)/2.0)])
+            if(height>=WINDOWY or width>=WINDOWX):
+                windows.append(image[xmin:xmax,ymin:ymax,0:3])
+                pos.append([((xmax+xmin)//2.0),((ymax+ymin)//2.0)])
+            else:
+                windows.append(image)
+                pos.append([((height/2.0)),((width)/2.0)])
+
     print(len(windows))        
     return windows, pos
 
-def main(path='Test1.jpg',name='digene'):    
+def main(path='Picture 10.jpg',name='wikoryl'):    
     graph = load_graph(model_file)
     labels = load_labels(label_file)
-    images,corners = get_contours.get_smaller_images(path)
+    print("Getting smaller images...")
+    images,corners = Testing_contours.get_smaller_images(path)
+    #images=[cv2.imread(path)]
+    #corners=[[0,0],[images[0].shape[0],images[0].shape[1]]]
     centroids=[]
     for i in range(0,len(images)):
-
+        print("Creating Windows...")
+        # cv2.imshow(str(i),images[i])
+        # cv2.waitKey(0)
         windows, pos = create_windows(images[i])
         xmin=corners[i][0]
         ymin=corners[i][1]
@@ -87,13 +104,14 @@ def main(path='Test1.jpg',name='digene'):
         with tf.Session(graph=graph) as sess:
             for i in range(len(windows)):
                 w = windows[i]
-                
+                if(i%100 == 0):
+                    print(i)
                 input_name = "import/" + input_layer
                 output_name = "import/" + output_layer
                 input_operation = graph.get_operation_by_name(input_name);
                 output_operation = graph.get_operation_by_name(output_name);
                 tic=time.time()
-                if(w.shape[0]):
+                if(w.shape[0] and w.shape[1]):
                     t = read_tensor_from_window(w, input_height=input_height, input_width=input_width, input_mean=input_mean, input_std=input_std) 
 
                     results = sess.run(output_operation.outputs[0], {input_operation.outputs[0]: t})
@@ -105,15 +123,15 @@ def main(path='Test1.jpg',name='digene'):
                     label=labels[k]
                     if(results[k]>0.85 and name==label):
                         points.append(pos[i])
-                        print(pos[i][0],pos[i][1])
-                        plt.imshow(w)
-                        plt.title(label+' ('+str(results[k])+')')
-                        plt.show()
+                        print(xmin+pos[i][0],ymin+pos[i][1])
+                        # plt.imshow(w)
+                        # plt.title(label+' ('+str(results[k])+')')
+                        # plt.show()
 
             #print(labels[k], results[k], pos[i])
         if len(points):
             app.append(xmin+sum([x[0] for x in points] )/len(points))
-            app.append(ymin+sum([x[1] for x in points] )/len(points))
+            app.append(1482-ymin-sum([x[1] for x in points] )/len(points))
             centroids.append(app)            
                 
         
@@ -122,14 +140,6 @@ def main(path='Test1.jpg',name='digene'):
 
 if __name__ == "__main__":
     #file_name = "tf_files/Test1.jpg"
-    model_file = "G:/ITSP Codes/tensorflow-for-poets-2-master/tf_files/retrained_graph.pb"
-    label_file = "G:/ITSP Codes/tensorflow-for-poets-2-master/tf_files/retrained_labels.txt"
-    input_height = 224
-    input_width = 224
-    input_mean = 128
-    input_std = 128
-    input_layer = "input"
-    output_layer = "final_result"
     c=main()
     print(c)
 
